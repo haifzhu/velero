@@ -46,6 +46,9 @@ spec:
           name: node-agent
           resources: {}
           volumeMounts:
+            - mountPath: /host_paths
+              mountPropagation: HostToContainer
+              name: host-paths
             - mountPath: /host_pods
               mountPropagation: HostToContainer
               name: host-pods
@@ -60,6 +63,9 @@ spec:
         - hostPath:
             path: /var/lib/kubelet/pods
           name: host-pods
+        - hostPath:
+            path: /opt/local-path-zcy
+          name: host-paths
         - emptyDir: {}
           name: scratch
         - name: cloud-credentials

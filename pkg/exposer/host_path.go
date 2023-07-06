@@ -19,6 +19,7 @@ package exposer
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -45,7 +46,12 @@ func GetPodVolumeHostPath(ctx context.Context, pod *corev1.Pod, pvcName string,
 
 	logger.WithField("volDir", volDir).Info("Got volume for backup PVC")
 
-	pathGlob := fmt.Sprintf("/host_pods/%s/volumes/*/%s", string(pod.GetUID()), volDir)
+	pathGlob := volDir
+	// 支持hostpath
+	if !strings.HasPrefix(volDir, "/host_paths/") {
+		pathGlob = fmt.Sprintf("/host_pods/%s/volumes/*/%s", string(pod.GetUID()), volDir)
+	}
+
 	logger.WithField("pathGlob", pathGlob).Debug("Looking for path matching glob")
 
 	path, err := singlePathMatch(pathGlob, fs, logger)

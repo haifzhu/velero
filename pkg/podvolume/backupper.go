@@ -285,6 +285,11 @@ func isHostPathVolume(volume *corev1api.Volume, pvc *corev1api.PersistentVolumeC
 		return false, errors.WithStack(err)
 	}
 
+	driverName := pv.Annotations["pv.kubernetes.io/provisioned-by"]
+	if driverName == "rancher.io/local-path" {
+		return false, nil
+	}
+
 	return pv.Spec.HostPath != nil, nil
 }
 

@@ -19,6 +19,7 @@ package kube
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -154,6 +155,17 @@ func GetVolumeDirectory(ctx context.Context, log logrus.FieldLogger, pod *corev1
 	err = cli.Get(ctx, client.ObjectKey{Name: pvc.Spec.VolumeName}, pv)
 	if err != nil {
 		return "", errors.WithStack(err)
+	}
+
+	// provisioned-by rancher.io/local-path
+	driverName := pv.Annotations[KubeAnnDynamicallyProvisioned]
+	if driverName == "rancher.io/local-path" {
+		if pv.Spec.PersistentVolumeSource.HostPath != nil {
+			path := strings.Split(pv.Spec.PersistentVolumeSource.HostPath.Path, "/")[len(strings.Split(pv.Spec.PersistentVolumeSource.HostPath.Path, "/"))-1]
+			return "/host_paths/" + path, nil
+		} else if pv.Spec.PersistentVolumeSource.Local != nil {
+			return pvc.Spec.VolumeName, nil
+		}
 	}
 
 	// PV's been created with a CSI source.
